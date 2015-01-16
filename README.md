@@ -5,6 +5,7 @@ This project is simply for my own amusement, and to understand the format better
 Usage: python pe_viewer.py <path_to_pe_file>
 
 Output:
+```
 +-------#DOS HEADER---------------------------------+
 | e_magic                        | MZ               |
 | e_lfanew                       | 0xF8             |
@@ -49,4 +50,4 @@ Output:
 | LoaderFlags                    | 0x0              |
 | NumberOfRvaAndSizes            | 0x10             |
 +---------------------------------------------------+
-
+```
