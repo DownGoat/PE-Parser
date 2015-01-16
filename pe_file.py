@@ -108,7 +108,6 @@ class PEFile():
 
         offset = int("0x3c", 16)
         self.e_lfanew = self.get_value_int(pe_data, offset, 4)
-        print("0x%x" % self.e_lfanew)
 
         if self.e_lfanew == 0:
             raise ParserError("PE header offset is 0, this is propably not a PE file.")
@@ -250,8 +249,6 @@ class PEFile():
 
         offset += 4
         self.number_of_rva_and_sizes = self.get_value_int(pe_data, offset, 4)
-
-        print(self.e_lfanew + 24 - offset)
 
 
     def parse(self, pe_file):
