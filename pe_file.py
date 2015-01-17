@@ -17,20 +17,13 @@ class ParserError(Exception):
     pass
 
 
+class Section():
+    pass
+
+
 class PEFile():
     def __init__(self, pe_file=None):
         self.pe_file = pe_file
-
-        #DOS HEADER
-        self.e_magic     = None
-        self.e_lfanew    = None
-
-        #PE Header
-        self.pe_signature                   = None
-        self.pe_machine                     = None
-        self.pe_number_of_sections          = None
-        self.pe_size_of_optional_header     = None
-        self.pe_characteristics             = None
 
         if self.pe_file != None:
             self.parse(self.pe_file)
@@ -49,14 +42,17 @@ class PEFile():
         return pe_data
 
     def get_value_int(self, pe_data, offset, limit):
-        return int.from_bytes(pe_data[offset:offset+limit], byteorder="little")
+        return int.from_bytes(pe_data[offset:offset + limit], byteorder="little")
+
+    def get_value_str(self, pe_data, offset, limit):
+        return str(pe_data[offset:offset + limit], "ascii")
 
     def print_table(self):
         table_width = 20
         column_width = 15
 
         print("\n+-------#DOS HEADER---------------------------------+")
-        print("| {0: <30} | {1: <16} |".format("e_magic", str(self.e_magic, "ascii")))
+        print("| {0: <30} | {1: <16} |".format("e_magic", self.e_magic))
         print("| {0: <30} | {1: <16} |".format("e_lfanew", "0x%X" % self.e_lfanew))
         print("+-------#PE HEADER#---------------------------------+")
         print("| {0: <30} | {1: <16} |".format("Signature", "0x%X" % self.pe_signature))
@@ -98,12 +94,25 @@ class PEFile():
         print("| {0: <30} | {1: <16} |".format("SizeOfHeapCommit", "0x%X" % self.size_of_heap_commit))
         print("| {0: <30} | {1: <16} |".format("LoaderFlags", "0x%X" % self.loader_flags))
         print("| {0: <30} | {1: <16} |".format("NumberOfRvaAndSizes", "0x%X" % self.number_of_rva_and_sizes))
-        print("+---------------------------------------------------+")
+        print("+------#SECTIONS#-----------------------------------+")
+
+        for sec in self.sections:
+            print("| {0: <30} | {1: <19} |".format("Name", "%s" % sec.name))
+            print("| {0: <30} | {1: <16} |".format("Misc.VirtualSize", "0x%X" % sec.misc_virtual_size))
+            print("| {0: <30} | {1: <16} |".format("VirtualAddress", "0x%X" % sec.virtual_address))
+            print("| {0: <30} | {1: <16} |".format("SizeOfRawData", "0x%X" % sec.size_of_raw_data))
+            print("| {0: <30} | {1: <16} |".format("PointerToRawData", "0x%X" % sec.pointer_to_raw_data))
+            print("| {0: <30} | {1: <16} |".format("PointerToRelocations", "0x%X" % sec.pointer_to_relocations))
+            print("| {0: <30} | {1: <16} |".format("PointerToLinenumbers", "0x%X" % sec.pointer_to_linenumbers))
+            print("| {0: <30} | {1: <16} |".format("NumberOfRelocations", "0x%X" % sec.number_of_relocations))
+            print("| {0: <30} | {1: <16} |".format("NumberOfLinenumbers", "0x%X" % sec.number_of_linenumbers))
+            print("| {0: <30} | {1: <16} |".format("Characteristics", "0x%X" % sec.characteristics))
+            print("+---------------------------------------------------+")
 
     def parse_dos_header(self, pe_data):
-        self.e_magic = pe_data[:2]
+        self.e_magic = self.get_value_str(pe_data, 0, 2)
 
-        if self.e_magic != b"MZ":
+        if self.e_magic != "MZ":
             raise ParserError("File is not a PE file.")
 
         offset = int("0x3c", 16)
@@ -250,6 +259,44 @@ class PEFile():
         offset += 4
         self.number_of_rva_and_sizes = self.get_value_int(pe_data, offset, 4)
 
+    def parse_section_table(self, pe_data):
+        self.sections = []
+        offset = self.e_lfanew + 24 + self.pe_size_of_optional_header
+
+        for x in range(self.pe_number_of_sections):
+            sec = Section()
+            sec.name = self.get_value_str(pe_data, offset, 8)
+
+            offset += 8
+            sec.misc_virtual_size = self.get_value_int(pe_data, offset, 4)
+
+            offset += 4
+            sec.virtual_address = self.get_value_int(pe_data, offset, 4)
+
+            offset += 4
+            sec.size_of_raw_data = self.get_value_int(pe_data, offset, 4)
+
+            offset += 4
+            sec.pointer_to_raw_data = self.get_value_int(pe_data, offset, 4)
+
+            offset += 4
+            sec.pointer_to_relocations = self.get_value_int(pe_data, offset, 4)
+
+            offset += 4
+            sec.pointer_to_linenumbers = self.get_value_int(pe_data, offset, 4)
+
+            offset += 4
+            sec.number_of_relocations = self.get_value_int(pe_data, offset, 2)
+
+            offset += 2
+            sec.number_of_linenumbers = self.get_value_int(pe_data, offset, 2)
+
+            offset += 2
+            sec.characteristics = self.get_value_int(pe_data, offset, 4)
+
+            offset += 4
+            self.sections.append(sec)
+
 
     def parse(self, pe_file):
         self.pe_file = pe_file
@@ -259,4 +306,5 @@ class PEFile():
         self.parse_dos_header(pe_data)
         self.parse_pe_header(pe_data)
         self.parse_optional_header(pe_data)
+        self.parse_section_table(pe_data)
         self.print_table()

@@ -49,5 +49,49 @@ Output:
 | SizeOfHeapCommit               | 0x1000           |
 | LoaderFlags                    | 0x0              |
 | NumberOfRvaAndSizes            | 0x10             |
++------#SECTIONS#-----------------------------------+
+| Name                           | .text            |
+| Misc.VirtualSize               | 0x55FB1          |
+| VirtualAddress                 | 0x1000           |
+| SizeOfRawData                  | 0x56000          |
+| PointerToRawData               | 0x1000           |
+| PointerToRelocations           | 0x0              |
+| PointerToLinenumbers           | 0x0              |
+| NumberOfRelocations            | 0x0              |
+| NumberOfLinenumbers            | 0x0              |
+| Characteristics                | 0x60000020       |
++---------------------------------------------------+
+| Name                           | .rdata            |
+| Misc.VirtualSize               | 0x1B62A          |
+| VirtualAddress                 | 0x57000          |
+| SizeOfRawData                  | 0x1C000          |
+| PointerToRawData               | 0x57000          |
+| PointerToRelocations           | 0x0              |
+| PointerToLinenumbers           | 0x0              |
+| NumberOfRelocations            | 0x0              |
+| NumberOfLinenumbers            | 0x0              |
+| Characteristics                | 0x40000040       |
++---------------------------------------------------+
+| Name                           | .data            |
+| Misc.VirtualSize               | 0x58C4           |
+| VirtualAddress                 | 0x73000          |
+| SizeOfRawData                  | 0x2000           |
+| PointerToRawData               | 0x73000          |
+| PointerToRelocations           | 0x0              |
+| PointerToLinenumbers           | 0x0              |
+| NumberOfRelocations            | 0x0              |
+| NumberOfLinenumbers            | 0x0              |
+| Characteristics                | 0xC0000040       |
++---------------------------------------------------+
+| Name                           | .rsrc            |
+| Misc.VirtualSize               | 0x3B90           |
+| VirtualAddress                 | 0x79000          |
+| SizeOfRawData                  | 0x4000           |
+| PointerToRawData               | 0x75000          |
+| PointerToRelocations           | 0x0              |
+| PointerToLinenumbers           | 0x0              |
+| NumberOfRelocations            | 0x0              |
+| NumberOfLinenumbers            | 0x0              |
+| Characteristics                | 0x40000040       |
 +---------------------------------------------------+
 ```
