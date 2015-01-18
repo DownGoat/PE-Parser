@@ -42,9 +42,15 @@ class PEFile():
         return pe_data
 
     def get_value_int(self, pe_data, offset, limit):
+        if offset + limit > len(pe_data):
+            raise ParserError("EOF reached prematurley.")
+
         return int.from_bytes(pe_data[offset:offset + limit], byteorder="little")
 
     def get_value_str(self, pe_data, offset, limit):
+        if offset + limit > len(pe_data):
+            raise ParserError("EOF reached prematurley.")
+
         return str(pe_data[offset:offset + limit], "ascii")
 
     def print_table(self):
@@ -307,4 +313,3 @@ class PEFile():
         self.parse_pe_header(pe_data)
         self.parse_optional_header(pe_data)
         self.parse_section_table(pe_data)
-        self.print_table()
