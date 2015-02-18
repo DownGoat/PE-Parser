@@ -1,6 +1,7 @@
 import sys
 
 
+
 def dump(the_string):
     hex_str = ""
 
@@ -25,8 +26,53 @@ class PEFile():
     def __init__(self, pe_file=None):
         self.pe_file = pe_file
 
+        self.dll_characteristics_bitmasks = {
+                int("0x0001", 16): "Reserverd",
+                int("0x0002", 16): "Reserverd",
+                int("0x0004", 16): "Reserverd",
+                int("0x0008", 16): "Reserverd",
+                int("0x0040", 16): "The DLL can be relocated at load time.",
+                int("0x0080", 16): "Code integrity checks are forced.",
+                int("0x0100", 16): "The image is compatible with data execution prevention (DEP).",
+                int("0x0200", 16): "The image is isolation aware, but should not be isolated.",
+                int("0x0400", 16): "The image does not use SEH.",
+                int("0x0800", 16): "Do not bind the image.",
+                int("0x1000", 16): "Reserverd",
+                int("0x2000", 16): "A WDM driver.",
+                int("0x4000", 16): "Reserverd",
+                int("0x8000", 16): "The image is terminal server aware.",
+                }
+
+        self.pe_characteristics_bitmasks = {
+                    int("0x0001", 16): "IMAGE_FILE_RELOCS_STRIPPED",
+                    int("0x0002", 16): "IMAGE_FILE_EXECUTABLE_IMAGE",
+                    int("0x0004", 16): "IMAGE_FILE_LINE_NUMS_STRIPPED",
+                    int("0x0008", 16): "IMAGE_FILE_LOCAL_SYMS_STRIPPED",
+                    int("0x0010", 16): "IMAGE_FILE_AGGRESIVE_WS_TRIM",
+                    int("0x0020", 16): "IMAGE_FILE_LARGE_ADDRESS_AWARE",
+                    int("0x0080", 16): "IMAGE_FILE_BYTES_REVERSED_LO",
+                    int("0x0100", 16): "IMAGE_FILE_32BIT_MACHINE",
+                    int("0x0200", 16): "IMAGE_FILE_DEBUG_STRIPPED",
+                    int("0x0400", 16): "IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP",
+                    int("0x0800", 16): "IMAGE_FILE_NET_RUN_FROM_SWAP",
+                    int("0x1000", 16): "IMAGE_FILE_SYSTEM",
+                    int("0x2000", 16): "IMAGE_FILE_DLL",
+                    int("0x4000", 16): "IMAGE_FILE_UP_SYSTEM_ONLY",
+                    int("0x8000", 16): "IMAGE_FILE_BYTES_REVERSED_HI",
+                }
+
         if self.pe_file != None:
             self.parse(self.pe_file)
+
+
+    def apply_bitmasks(self, value, bitmasks):
+        comments = []
+        for mask, comment  in bitmasks.items():
+            if value & mask == mask:
+                comments.append(comment)
+
+        return comments
+
 
     def open_pe(self):
         pe_data = None
@@ -135,12 +181,14 @@ class PEFile():
         offset += 4
         self.pe_machine = self.get_value_int(pe_data, offset, 2)
         if self.pe_machine != int("0x014c", 16) and self.pe_machine != int("0x0200", 16) and self.pe_machine != int("0x8664", 16):
-            raise ParserError("Machine member has value %d" % self.pe_machine)
+            #raise ParserError("Machine member has value %d" % self.pe_machine)
+            self.pe_machine_comment = "Undocummented value."
 
         offset += 2
         self.pe_number_of_sections = self.get_value_int(pe_data, offset, 2)
         if self.pe_number_of_sections > 96:
-            raise ParserError("NumberOfSections member has a value that is greater than 96\n")
+            #raise ParserError("NumberOfSections member has a value that is greater than 96\n")
+            self.pe_number_of_sections_comment = "The value is too high"
 
         offset += 2
         self.pe_time_date_stamp = self.get_value_int(pe_data, offset, 4)
@@ -156,6 +204,11 @@ class PEFile():
 
         offset += 2
         self.pe_characteristics = self.get_value_int(pe_data, offset, 2)
+        self.pe_characteristics_comments = self.apply_bitmasks(
+                self.pe_characteristics,
+                self.pe_characteristics_bitmasks
+                )
+        print(self.pe_characteristics_comments)
         # Unsure about how to check if the value is correct.
         # http://msdn.microsoft.com/en-us/library/windows/desktop/ms680313%28v=vs.85%29.aspx
 
@@ -233,19 +286,13 @@ class PEFile():
         self.subsystem = self.get_value_int(pe_data, offset, 2)
         if self.subsystem >= 0 or self.subsystem <= 16:
             if self.subsystem == 4 or self.subsystem == 6 or self.subsystem == 8 or self.subsystem == 15:
-                raise ParserError("Subsystem member has value %d" % self.subsystem)
+                #raise ParserError("Subsystem member has value %d" % self.subsystem)
+                self.subsystem_comment = "Undocumented value."
 
         offset += 2
         self.dll_characteristics = self.get_value_int(pe_data, offset, 2)
-        if self.dll_characteristics != int("0x0001", 16) and self.dll_characteristics != int("0x0002", 16) and \
-                self.dll_characteristics != int("0x0004", 16) and self.dll_characteristics != int("0x0008", 16) and \
-                self.dll_characteristics != int("0x0040", 16) and self.dll_characteristics != int("0x0080", 16) and \
-                self.dll_characteristics != int("0x0100", 16) and self.dll_characteristics != int("0x0200", 16) and \
-                self.dll_characteristics != int("0x0400", 16) and self.dll_characteristics != int("0x0800", 16) and \
-                self.dll_characteristics != int("0x1000", 16) and self.dll_characteristics != int("0x2000", 16) and \
-                self.dll_characteristics != int("0x4000", 16) and self.dll_characteristics != int("0x8000", 16) and \
-                self.dll_characteristics != 0:
-                    raise ParserError("DLLCharacteristics member has value %d." % self.dll_characteristics)
+
+        print(self.apply_bitmasks(self.dll_characteristics, self.dll_characteristics_bitmasks))
 
         offset += 2
         self.size_of_stack_reserve = self.get_value_int(pe_data, offset, 4)
